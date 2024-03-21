@@ -25,7 +25,7 @@ public class Main {
                 case 2:
                     user = login();
                     if (user != null)
-                        Interface.start(user);
+                        Dashboard.start();
                     break;
                 case 3:
                     System.out.println("\nExiting...");

@@ -1,18 +1,15 @@
 import java.sql.*;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Interface
  */
-public class Interface {
+public class Dashboard {
     static Scanner get = new Scanner(System.in);
-    static User user;
 
-    static void start(User user) throws SQLException {
-        Interface.user = user;
-
+    static void start() throws SQLException {
         int choice = 0;
-        while (user != null && choice != 6) {
+        while (Main.user != null && choice != 6) {
             System.out.println("\n1. Create a Group");
             System.out.println("2. Add Expense in a Group");
             System.out.println("3. List all My Dues");
@@ -24,19 +21,28 @@ public class Interface {
             get.nextLine();
             switch (choice) {
                 case 1:
-                    createGroup();
+                    System.out.print("Enter the group name: ");
+                    String groupName = get.nextLine();
+                    System.out.print("Enter the members: ");
+                    String memberNames = get.nextLine().trim(); // the input is comma separated values
+                    int status = Main.user.createGroupWithMembers(groupName, memberNames);
+                    if (status > 0) {
+                        System.out.println("\nGroup created successfully...");
+                    } else {
+                        System.out.println("Error in creating group");
+                    }
                     break;
                 case 2:
-                    addExpense();
+                    showExpenseOptions();
                     break;
                 case 3:
-                    listDuePayments();
+                    showDueOptions();
                     break;
                 case 4:
-                    listPendingPayments();
+                    showPendingsOptions();
                     break;
                 case 6:
-                    logout();
+                    Main.user = null; // logging out
                     break;
                 default:
                     System.out.println("\nInvalid choice");
@@ -44,20 +50,7 @@ public class Interface {
         }
     }
 
-    static void createGroup() throws SQLException {
-        System.out.print("Enter the group name: ");
-        String groupName = get.nextLine();
-        System.out.print("Enter the members: ");
-        String memberNames = get.nextLine().trim(); // the input is comma separated values
-        int status = DB.createGroup(user, groupName, memberNames);
-        if (status > 0) {
-            System.out.println("\nGroup created successfully...");
-        } else {
-            System.out.println("\nError in creating group");
-        }
-    }
-
-    static void addExpense() throws SQLException {
+    static void showExpenseOptions() throws SQLException {
         System.out.print("Enter the group name: ");
         String groupName = get.nextLine();
         System.out.print("Enter the Expense Name: ");
@@ -74,27 +67,27 @@ public class Interface {
         get.nextLine();
         switch (choice) {
             case 1:
-                int status = DB.shareEqually(user, groupName, expenseName, amount);
+                int status = Expense.shareEqually(groupName, expenseName, amount);
                 if (status > 0)
                     System.out.println("\nExpense added successfully");
                 else
-                    System.out.println("\nError in adding expense");
+                    System.out.println("Cannot add expense");
                 break;
             case 2:
                 System.out.print("Enter the member names: ");
                 String memberNames = get.nextLine(); // the input is comma separated values
-                status = DB.shareEquallyAmongSome(user, groupName, expenseName, amount, memberNames);
+                status = Expense.shareEquallyAmongSome(expenseName, amount, groupName, memberNames);
                 if (status > 0)
                     System.out.println("\nExpense added successfully");
                 else
-                    System.out.println("\nError in adding expense");
+                    System.out.println("Cannot add expense");
                 break;
             default:
                 System.out.println("\nInvalid choice");
         }
     }
 
-    static void listDuePayments() throws SQLException {
+    static void showDueOptions() throws SQLException {
         System.out.println("\n\tChoose an option");
         System.out.println("\t1. Show All");
         System.out.println("\t2. Filter by Goup");
@@ -106,17 +99,17 @@ public class Interface {
         ResultSet res = null;
         switch (choice) {
             case 1:
-                res = DB.getAllDues(user);
+                res = Main.user.getMyDues();
                 break;
             case 2:
                 System.out.print("Enter the group name: ");
                 String groupName = get.nextLine();
-                res = DB.getDuesByGroup(user, groupName);
+                res = Main.user.getMyDuesByGroupName(groupName);
                 break;
             case 3:
                 System.out.print("Enter the user name: ");
                 String userName = get.nextLine();
-                res = DB.getDuesByUser(user, userName);
+                res = Main.user.getMyDuesByUsername(userName);
                 break;
             default:
                 System.out.println("\nInvalid choice");
@@ -142,7 +135,7 @@ public class Interface {
         System.out.println("=========================================");
     }
 
-    static void listPendingPayments() throws SQLException {
+    static void showPendingsOptions() throws SQLException {
         System.out.println("\n\tChoose an option");
         System.out.println("\t1. Show All");
         System.out.println("\t2. Filter by Goup");
@@ -154,17 +147,17 @@ public class Interface {
         ResultSet res = null;
         switch (choice) {
             case 1:
-                res = DB.getAllPendingPayments(user);
+                res = Main.user.getAllPendings();
                 break;
             case 2:
                 System.out.print("Enter the group name: ");
                 String groupName = get.nextLine();
-                res = DB.getPendingPaymentsByGroup(user, groupName);
+                res = Main.user.getAllPendingsByGroup(groupName);
                 break;
             case 3:
                 System.out.print("Enter the user name: ");
                 String userName = get.nextLine();
-                res = DB.getPendingPaymentsByUser(user, userName);
+                res = Main.user.getAllPendingsByUsername(userName);
                 break;
             default:
                 System.out.println("\nInvalid choice");
@@ -189,9 +182,5 @@ public class Interface {
         System.out.println("=========================================");
         System.out.println("Total:\tRs." + total);
         System.out.println("=========================================");
-    }
-
-    static void logout() {
-        user = null;
     }
 }
